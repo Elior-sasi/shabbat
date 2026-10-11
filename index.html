@@ -1,0 +1,561 @@
+<!doctype html>
+<html lang="he" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#120f1a">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="בין השמשות">
+<link rel="manifest" href="manifest.json">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<link rel="icon" type="image/png" href="apple-touch-icon.png">
+<style>:root{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}</style>
+<title>בין השמשות</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Assistant:wght@400;500;600;700&family=Frank+Ruhl+Libre:wght@300;400;500;700&display=swap">
+<style>
+/* Layout: one evening-toned phone column. The hero is a twilight sky (the app is named for that hour) with the countdown and the week; entry/exit tiles; Omer; zmanim as a siddur-style ledger; the year as a list. Serif numerals, candle gold before Shabbat, moonlight inside it. */
+:root{
+  --bg:#120f1a; --surface:#1b1624; --surface-2:#241d2f; --line:#30273c;
+  --fg:#f5eee3; --muted:#a99db4;
+  --amber:#eeb45f; --blue:#b6c8f2; --violet:#d1aee9; --slate:#b0a8bb;
+  --accent:var(--amber); --accent-soft:rgba(238,180,95,.13); --on-accent:#24160a;
+  --sky1:#1c1a3d; --sky2:#3b2650; --sky3:#8a4a3a;
+  --f-body:"Assistant","Segoe UI",system-ui,sans-serif; --f-num:"Frank Ruhl Libre","David",Georgia,serif;
+  color-scheme:dark;
+}
+.app.inside{--accent:var(--blue);--accent-soft:rgba(182,200,242,.13);--on-accent:#101530;--sky1:#0c0f2a;--sky2:#171a40;--sky3:#2a2752}
+html,body{min-height:100%}
+body{margin:0;background:var(--bg);color:var(--fg);font-family:var(--f-body);font-size:15.5px;-webkit-tap-highlight-color:transparent}
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+button,select{font:inherit;color:inherit}
+button{background:none;border:0;cursor:pointer;padding:0}
+button:focus-visible,select:focus-visible,input:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.num{font-variant-numeric:tabular-nums}
+.app{max-width:460px;margin:0 auto;padding:12px 16px 32px;display:flex;flex-direction:column;gap:20px;direction:rtl}
+
+/* header */
+.top{display:flex;align-items:center;justify-content:space-between;gap:12px}
+.brand{display:flex;align-items:center;gap:10px;min-width:0}
+.brand img{width:40px;height:40px;border-radius:11px;flex:0 0 auto}
+.brand>div{min-width:0}
+.brand .sub{line-height:1.35}
+.brand h1{font-family:var(--f-num);font-size:23px;font-weight:700;margin:0;line-height:1.1}
+.sub{font-size:13px;color:var(--muted);margin-top:1px}
+.pill{display:inline-flex;align-items:center;gap:6px;font-size:12.5px;color:var(--fg);background:var(--surface);border:1px solid var(--line);padding:6px 11px;border-radius:999px;white-space:nowrap}
+.pill svg{width:14px;height:14px;color:var(--muted)}
+
+/* hero card */
+.hero{position:relative;overflow:hidden;border-radius:22px;background:linear-gradient(180deg,var(--sky1) 0%,var(--sky2) 62%,var(--sky3) 100%);padding:22px 18px 18px;transition:background .8s;display:flex;flex-direction:column;align-items:center;text-align:center}
+.glow{position:absolute;inset:auto -10% -55% -10%;height:80%;background:radial-gradient(closest-side,rgba(255,190,120,.35),transparent);pointer-events:none}
+.app.inside .glow{background:radial-gradient(closest-side,rgba(182,200,242,.18),transparent)}
+#sky{position:absolute;inset:0;width:100%;height:100%;pointer-events:none}
+.hero>*:not(.glow):not(.share):not(#sky){position:relative}
+.eyebrow{font-size:13px;color:rgba(245,238,227,.72)}
+.name{font-family:var(--f-num);font-size:24px;font-weight:500;margin-top:2px;text-wrap:balance}
+.big{font-family:var(--f-num);font-weight:300;font-size:66px;line-height:1.1;margin-top:8px;display:flex;align-items:baseline;justify-content:center;gap:4px 14px;flex-wrap:wrap}
+.big small{font-family:var(--f-body);font-size:16px;font-weight:400;color:rgba(245,238,227,.7);margin-inline-start:4px}
+.lbl{font-size:14px;color:var(--accent);font-weight:500;margin-top:2px;transition:color .6s}
+.week{width:100%;margin-top:18px;display:grid;grid-template-columns:repeat(7,1fr);gap:4px}
+.wd{display:flex;flex-direction:column;align-items:center;gap:4px;padding:8px 0 7px;border-radius:12px;font-size:12px;color:rgba(245,238,227,.62)}
+.wd b{font-family:var(--f-num);font-weight:500;font-size:17px;color:var(--fg)}
+.wd svg{width:13px;height:13px}
+.wd.past{opacity:.4}
+.wd.today{background:rgba(255,255,255,.09)}
+.wd.fri{color:var(--amber)} .wd.sat{color:var(--blue)}
+.wd.hol{color:var(--violet)}
+.wbar{width:100%;height:3px;border-radius:2px;background:rgba(255,255,255,.14);margin-top:8px;overflow:hidden}
+.wbar i{display:block;height:100%;width:0;margin-inline-start:0;background:var(--accent);border-radius:2px;transition:width .8s,background .6s}
+
+/* tiles */
+.pair{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.tile{display:flex;flex-direction:column;gap:6px;padding:14px;border-radius:18px;background:var(--surface);border:1px solid var(--line);min-width:0}
+.tile .h{display:flex;align-items:center;gap:6px;font-size:12.5px;color:var(--muted)}
+.tile .h svg{width:16px;height:16px}
+.tile .t{font-family:var(--f-num);font-weight:400;font-size:36px;line-height:1;direction:ltr;text-align:right}
+.tile .d{font-size:12px;color:var(--muted)}
+.tile.on{border-color:var(--accent);background:var(--accent-soft)}
+.tile.on .h,.tile.on .h svg{color:var(--accent)}
+.note{font-size:12.5px;color:var(--muted);margin:-10px 4px 0;text-align:center}
+
+.share{position:absolute;top:12px;left:12px;width:36px;height:36px;border-radius:50%;background:rgba(255,255,255,.1);display:grid;place-items:center;color:rgba(245,238,227,.85);z-index:1}
+.share svg{width:17px;height:17px}
+.share:active{transform:scale(.94)}
+/* omer */
+.omer{display:flex;flex-direction:column;gap:10px;padding:16px;border-radius:20px;background:var(--surface);border:1px solid var(--line)}
+.om-h{display:flex;align-items:center;gap:8px;font-size:13px;color:var(--muted)}
+.om-h svg{width:18px;height:18px;color:var(--amber)}
+.om-h .when{margin-inline-start:auto;font-family:var(--f-num);font-weight:500;font-size:16px;color:var(--fg);direction:ltr}
+.om-row{display:flex;align-items:baseline;gap:12px}
+.om-n{font-family:var(--f-num);font-weight:300;font-size:58px;line-height:1}
+.om-n small{font-family:var(--f-body);font-size:14px;font-weight:400;color:var(--muted);margin-inline-start:6px}
+.om-t{font-family:var(--f-num);font-size:18px;font-weight:500;line-height:1.5;text-wrap:balance}
+.om-s{display:flex;gap:6px;flex-wrap:wrap}
+.om-s span{font-size:12px;padding:3px 10px;border-radius:999px;background:var(--surface-2);border:1px solid var(--line);color:var(--muted)}
+.om-s span.hi{color:var(--amber);border-color:rgba(238,180,95,.45);background:rgba(238,180,95,.1)}
+.om-dots{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:4px;overflow:hidden}
+.om-w{display:flex;gap:3px;justify-content:center}
+.om-w i{width:4px;height:4px;border-radius:50%;background:var(--line)}
+.om-w i.on{background:var(--amber)} .om-w i.tn{background:var(--amber);opacity:.45}
+.om-f{font-size:12px;color:var(--muted);margin:0;line-height:1.5}
+/* primary action */
+.power{display:flex;align-items:center;justify-content:center;gap:10px;width:100%;padding:15px;border-radius:20px;background:var(--accent);color:var(--on-accent);font-size:16px;font-weight:700;transition:background .6s,transform .12s}
+.power:active{transform:scale(.98)}
+.power svg{width:20px;height:20px}
+
+/* sections */
+.sec{display:flex;flex-direction:column;gap:8px}
+.sec-h{display:flex;align-items:center;justify-content:space-between;gap:8px}
+.sec h2{font-size:12px;font-weight:500;color:var(--muted);letter-spacing:.6px;margin:0}
+.znav{display:flex;align-items:center;gap:6px}
+.zb{width:30px;height:30px;border-radius:50%;background:var(--surface);border:1px solid var(--line);display:grid;place-items:center;color:var(--muted)}
+.zb svg{width:14px;height:14px}
+.zb.txt{width:auto;padding:0 10px;border-radius:999px;font-size:12px}
+.zdate{font-size:13px;color:var(--fg)}
+.zgrid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:0 22px;background:var(--surface);border:1px solid var(--line);border-radius:18px;padding:6px 16px}
+.z{display:flex;align-items:baseline;gap:8px;padding:9px 0;border-bottom:1px solid var(--line);min-width:0}
+.z:nth-last-child(-n+2){border-bottom:0}
+.z .n{font-size:13.5px;color:var(--muted);line-height:1.3;min-width:0}
+.z .v{margin-inline-start:auto;flex:0 0 auto;font-family:var(--f-num);font-weight:500;font-size:18px;direction:ltr}
+.z.past{opacity:.42}
+.z.now .n,.z.now .v{color:var(--accent)}
+@media (max-width:370px){.zgrid{grid-template-columns:1fr}.z:nth-last-child(2){border-bottom:1px solid var(--line)}}
+.seg{display:grid;grid-template-columns:repeat(6,1fr);gap:4px;background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:5px}
+.seg button{padding:8px 2px;min-width:0;border-radius:11px;font-size:12px;color:var(--muted);transition:background .25s,color .25s;white-space:nowrap}
+.seg button[aria-pressed="true"]{background:var(--accent-soft);color:var(--accent)}
+
+.list{display:flex;flex-direction:column;gap:6px}
+.month{font-size:12px;color:var(--muted);margin:8px 4px 0;letter-spacing:.4px}
+.ev{display:grid;grid-template-columns:34px minmax(0,1fr) auto;gap:12px;align-items:center;padding:11px 12px;border-radius:16px;background:var(--surface);border:1px solid var(--line)}
+.ic{width:34px;height:34px;border-radius:50%;display:grid;place-items:center;background:rgba(182,200,242,.12);color:var(--blue)}
+.ic svg{width:18px;height:18px}
+.ev.chag .ic{background:rgba(209,174,233,.13);color:var(--violet)}
+.ev.fast .ic{background:rgba(154,168,186,.12);color:var(--slate)}
+.ev.vac .ic{background:rgba(150,214,190,.13);color:#9fd9c4}
+.ev.fest .ic{background:rgba(238,180,95,.13);color:var(--amber)}
+.ev .nm{font-family:var(--f-num);font-weight:500;font-size:17px;overflow-wrap:anywhere}
+.ev .s{font-size:12px;color:var(--muted)}
+.ev .tt{display:flex;flex-direction:column;align-items:flex-end;gap:2px;font-family:var(--f-num);font-weight:500;font-size:16px;direction:ltr;white-space:nowrap}
+.ev .tt span{display:flex;gap:6px;align-items:center}
+.ev .tt i{font-style:normal;font-family:var(--f-body);font-size:11px;color:var(--muted)}
+.tag{display:inline-block;font-size:11px;font-weight:500;color:var(--violet);background:rgba(209,174,233,.13);border-radius:999px;padding:0 7px;margin-inline-start:6px;vertical-align:1px}
+
+/* sheet */
+.scrim{position:fixed;inset:0;background:rgba(3,6,10,.6);backdrop-filter:blur(4px);-webkit-backdrop-filter:blur(4px);display:flex;align-items:flex-end;justify-content:center;z-index:10}
+.sheet{width:100%;max-width:460px;max-height:88vh;overflow-y:auto;background:var(--surface);border:1px solid var(--line);border-bottom:0;border-radius:24px 24px 0 0;padding:18px 20px calc(24px + env(safe-area-inset-bottom,0px));direction:rtl;display:flex;flex-direction:column;gap:16px}
+.grab{width:40px;height:5px;border-radius:3px;background:var(--line);margin:0 auto}
+.sheet h3{margin:0;font-family:var(--f-num);font-size:21px;font-weight:500}
+.fld{display:flex;flex-direction:column;gap:8px}
+.fld>label,.fld>.l{font-size:12px;color:var(--muted);letter-spacing:.4px}
+select,input[type=number]{width:100%;background:var(--surface-2);border:1px solid var(--line);border-radius:14px;padding:12px;color:var(--fg)}
+.opts{display:flex;flex-wrap:wrap;gap:6px}
+.opts button{padding:8px 13px;border-radius:999px;background:var(--surface-2);border:1px solid var(--line);font-size:13px;color:var(--muted)}
+.opts button[aria-pressed="true"]{border-color:var(--accent);background:var(--accent-soft);color:var(--accent)}
+.row2{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.fine{font-size:12px;color:var(--muted);margin:0;line-height:1.5}
+.btn{padding:14px;border-radius:14px;font-weight:600;background:var(--accent);color:var(--on-accent)}
+.toast{position:fixed;left:50%;bottom:calc(20px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);background:var(--surface-2);border:1px solid var(--line);padding:10px 16px;border-radius:12px;font-size:13.5px;z-index:20;direction:rtl;white-space:nowrap;opacity:0;transition:opacity .2s;pointer-events:none}
+.toast.on{opacity:1}
+@media (max-width:370px){.big{font-size:60px}.zgrid{grid-template-columns:repeat(2,minmax(0,1fr))}.seg button{font-size:11px}}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+</head>
+<body>
+
+
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <symbol id="i-flame" viewBox="0 0 24 24"><path fill="currentColor" d="M12 2c-3 4.6-6 8-6 11.6A6 6 0 0 0 18 13.6C18 10 15 6.6 12 2zm0 18a2.6 2.6 0 0 1-2.6-2.6c0-1.4 1-2.9 2.6-5.2 1.6 2.3 2.6 3.8 2.6 5.2A2.6 2.6 0 0 1 12 20z"/></symbol>
+  <symbol id="i-stars" viewBox="0 0 24 24"><path fill="currentColor" d="M9 3l1.6 4.4L15 9l-4.4 1.6L9 15l-1.6-4.4L3 9l4.4-1.6zM17.5 13l.9 2.6 2.6.9-2.6.9-.9 2.6-.9-2.6-2.6-.9 2.6-.9z"/></symbol>
+  <symbol id="i-pin" viewBox="0 0 24 24"><path fill="currentColor" d="M12 2a7 7 0 0 0-7 7c0 5 7 13 7 13s7-8 7-13a7 7 0 0 0-7-7zm0 9.5A2.5 2.5 0 1 1 12 6.5a2.5 2.5 0 0 1 0 5z"/></symbol>
+  <symbol id="i-share" viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" d="M12 15V3M8 7l4-4 4 4M5 12v7a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-7"/></symbol>
+  <symbol id="i-left" viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" d="M15 5l-7 7 7 7"/></symbol>
+  <symbol id="i-right" viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"/></symbol>
+  <symbol id="i-book" viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round" d="M4 5.5C6.5 4 9.5 4 12 6c2.5-2 5.5-2 8-.5V19c-2.5-1.5-5.5-1.5-8 .5-2.5-2-5.5-2-8-.5z"/><path stroke="currentColor" stroke-width="2" d="M12 6v13.5"/></symbol>
+  <symbol id="i-chag" viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round" d="M12 3l2.6 5.4 5.9.8-4.3 4.1 1 5.9L12 16.4l-5.2 2.8 1-5.9L3.5 9.2l5.9-.8z"/></symbol>
+  <symbol id="i-fast" viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" d="M6 3h12M6 21h12M7 3c0 5 5 6 5 9s-5 4-5 9M17 3c0 5-5 6-5 9s5 4 5 9"/></symbol>
+  <symbol id="i-wheat" viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" d="M12 22V9M12 9c0-3 1.5-5 3-6 .5 2.5-.5 5-3 6zM12 9c0-3-1.5-5-3-6-.5 2.5.5 5 3 6zM12 15c1-2.5 3-3.6 5-3.6-.5 2.4-2.5 3.6-5 3.6zM12 15c-1-2.5-3-3.6-5-3.6.5 2.4 2.5 3.6 5 3.6z"/></symbol>
+  <symbol id="i-sun" viewBox="0 0 24 24"><circle cx="12" cy="12" r="4" fill="none" stroke="currentColor" stroke-width="2"/><path stroke="currentColor" stroke-width="2" stroke-linecap="round" d="M12 2.5v2M12 19.5v2M2.5 12h2M19.5 12h2M5.3 5.3l1.4 1.4M17.3 17.3l1.4 1.4M5.3 18.7l1.4-1.4M17.3 6.7l1.4-1.4"/></symbol>
+  <symbol id="i-menorah" viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" d="M12 6v15M8 21h8M4 8v3a8 8 0 0 0 16 0V8M8 9v2a4 4 0 0 0 8 0V9"/><circle cx="12" cy="3.5" r="1.5" fill="currentColor"/></symbol>
+</svg>
+
+<div class="app" id="app" dir="rtl" lang="he">
+  <header class="top">
+    <div class="brand">
+      <img src="apple-touch-icon.png" alt="">
+      <div>
+        <h1>בין השמשות</h1>
+        <div class="sub" id="today"></div>
+      </div>
+    </div>
+    <button class="pill" id="cityBtn" type="button" aria-label="שינוי מיקום והגדרות"><svg><use href="#i-pin"/></svg><span id="cityName">ירושלים</span></button>
+  </header>
+
+  <section class="hero" aria-live="polite">
+    <canvas id="sky" aria-hidden="true"></canvas>
+    <div class="glow"></div>
+    <button class="share" id="copyBtn" type="button" aria-label="העתקת הזמנים לשיתוף"><svg><use href="#i-share"/></svg></button>
+    <div class="eyebrow" id="hDate"></div>
+    <div class="name" id="hName">טוען…</div>
+    <div class="big num" id="hBig">--:--</div>
+    <div class="lbl" id="hLbl"></div>
+    <div class="week" id="week"></div>
+    <div class="wbar"><i id="wfill"></i></div>
+  </section>
+
+  <div class="pair">
+    <div class="tile" id="tIn"><div class="h"><svg><use href="#i-flame"/></svg>הדלקת נרות</div><div class="t num" id="hIn">--:--</div><div class="d" id="hInD"></div></div>
+    <div class="tile" id="tOut"><div class="h"><svg><use href="#i-stars"/></svg>יציאה</div><div class="t num" id="hOut">--:--</div><div class="d" id="hOutD"></div></div>
+  </div>
+  <p class="note" id="hExtra" hidden></p>
+
+  <section class="omer" id="omer" hidden aria-label="ספירת העומר"></section>
+
+  <section class="sec" aria-label="זמני היום">
+    <div class="sec-h">
+      <h2>זמני היום</h2>
+      <div class="znav">
+        <button class="zb" id="zPrev" type="button" aria-label="היום הקודם"><svg><use href="#i-right"/></svg></button>
+        <button class="zb txt" id="zToday" type="button">היום</button>
+        <button class="zb" id="zNext" type="button" aria-label="היום הבא"><svg><use href="#i-left"/></svg></button>
+      </div>
+    </div>
+    <div class="zdate" id="zDate"></div>
+    <div class="zgrid" id="zGrid"></div>
+  </section>
+
+  <section class="sec" aria-label="השנה הקרובה">
+    <h2>השנה הקרובה</h2>
+    <div class="seg" id="filters"></div>
+    <div class="list" id="list"></div>
+  </section>
+</div>
+
+<div class="scrim" id="scrim" hidden>
+  <div class="sheet" role="dialog" aria-modal="true" aria-labelledby="shT">
+    <div class="grab"></div>
+    <h3 id="shT">מיקום והגדרות</h3>
+    <div class="fld"><label for="city">עיר</label><select id="city"></select></div>
+    <div class="row2" id="customBox" hidden>
+      <div class="fld"><label for="lat">קו רוחב</label><input id="lat" type="number" step="0.0001" inputmode="decimal"></div>
+      <div class="fld"><label for="lon">קו אורך</label><input id="lon" type="number" step="0.0001" inputmode="decimal"></div>
+    </div>
+    <div class="fld"><div class="l">הדלקת נרות - דקות לפני השקיעה</div><div class="opts" id="offChips"></div></div>
+    <div class="fld"><div class="l">זמן יציאה</div><div class="opts" id="havChips"></div></div>
+    <div class="fld"><div class="l">לוח חגים</div><div class="opts" id="ilChips"></div></div>
+    <p class="fine">החופשות לפי לוח משרד החינוך לשנת תשפ״ז, לבתי ספר ממלכתיים. הזמנים מחושבים במכשיר לפי מיקום השמש, בגובה פני הים. ייתכנו הפרשים של דקה מול לוחות אחרים. סוף זמן ק״ש ותפילה לפי הגר״א ולפי המג״א (16.1°).</p>
+    <button class="btn" id="shClose" type="button">סיום</button>
+  </div>
+</div>
+<div class="toast" id="toast" role="status"></div>
+
+<script>
+
+const R=Math.PI/180, DAY=864e5;
+// NOAA solar position; returns UTC ms when the sun is `dep` degrees below the horizon (0.833 = sunrise/sunset)
+function sunEvent(y,m,d,lat,lon,dep,rising){
+  const zen=(90+dep)*R; let t=Date.UTC(y,m,d,12)-lon/15*3600000;
+  for(let i=0;i<3;i++){
+    const jd=t/DAY+2440587.5, T=(jd-2451545)/36525;
+    const L0=((280.46646+T*(36000.76983+T*0.0003032))%360+360)%360;
+    const M=357.52911+T*(35999.05029-0.0001537*T);
+    const e=0.016708634-T*(0.000042037+0.0000001267*T);
+    const C=Math.sin(M*R)*(1.914602-T*(0.004817+0.000014*T))+Math.sin(2*M*R)*(0.019993-0.000101*T)+Math.sin(3*M*R)*0.000289;
+    const om=125.04-1934.136*T, lam=L0+C-0.00569-0.00478*Math.sin(om*R);
+    const eps=23+(26+(21.448-T*(46.815+T*(0.00059-T*0.001813)))/60)/60+0.00256*Math.cos(om*R);
+    const dec=Math.asin(Math.sin(eps*R)*Math.sin(lam*R));
+    const yy=Math.tan(eps*R/2)**2;
+    const eot=4/R*(yy*Math.sin(2*L0*R)-2*e*Math.sin(M*R)+4*e*yy*Math.sin(M*R)*Math.cos(2*L0*R)-0.5*yy*yy*Math.sin(4*L0*R)-1.25*e*e*Math.sin(2*M*R));
+    const cosH=(Math.cos(zen)-Math.sin(lat*R)*Math.sin(dec))/(Math.cos(lat*R)*Math.cos(dec));
+    if(cosH<-1||cosH>1) return NaN;
+    const H=Math.acos(cosH)/R;
+    t=Date.UTC(y,m,d)+(720-4*lon-eot+(rising?-4:4)*H)*60000;
+  }
+  return t;
+}
+const HFMT=new Intl.DateTimeFormat('en-u-ca-hebrew',{timeZone:'UTC',day:'numeric',month:'long',year:'numeric'});
+const HMN={Tishri:'תשרי',Heshvan:'חשוון',Kislev:'כסלו',Tevet:'טבת',Shevat:'שבט','Adar I':"אדר א'",Adar:'אדר','Adar II':"אדר ב'",Nisan:'ניסן',Iyar:'אייר',Sivan:'סיוון',Tamuz:'תמוז',Av:'אב',Elul:'אלול'};
+function gem(n){const L=[[400,'ת'],[300,'ש'],[200,'ר'],[100,'ק'],[90,'צ'],[80,'פ'],[70,'ע'],[60,'ס'],[50,'נ'],[40,'מ'],[30,'ל'],[20,'כ'],[10,'י'],[9,'ט'],[8,'ח'],[7,'ז'],[6,'ו'],[5,'ה'],[4,'ד'],[3,'ג'],[2,'ב'],[1,'א']];
+  let s='';n%=1000;while(n>0){if(n===15){s+='טו';break}if(n===16){s+='טז';break}for(const [v,c] of L){if(n>=v){s+=c;n-=v;break}}}
+  return s.length>1?s.slice(0,-1)+'״'+s.slice(-1):s+'׳';}
+
+// ---- day table (cached per range) ----
+const DCACHE=new Map();
+function dayAt(t){let o=DCACHE.get(t);if(o)return o;const dt=new Date(t),p=HFMT.formatToParts(new Date(t+12*36e5)),g=k=>p.find(x=>x.type===k).value;
+  o={t,y:dt.getUTCFullYear(),m:dt.getUTCMonth(),d:dt.getUTCDate(),dow:dt.getUTCDay(),hm:g('month'),hd:+g('day'),hy:+g('year')};o.hk=o.hm+' '+o.hd;DCACHE.set(t,o);return o;}
+function hebDate(o,withYear=true){return gem(o.hd)+' ב'+HMN[o.hm]+(withYear?' '+gem(o.hy):'');}
+
+function holiday(o,israel){const k=o.hk;
+  const IL={'Tishri 1':'ראש השנה','Tishri 2':'ראש השנה','Tishri 10':'יום כיפור','Tishri 15':'סוכות','Tishri 22':israel?'שמיני עצרת ושמחת תורה':'שמיני עצרת','Nisan 15':'פסח','Nisan 21':'שביעי של פסח','Sivan 6':'שבועות'};
+  const DI={'Tishri 16':'סוכות','Tishri 23':'שמחת תורה','Nisan 16':'פסח','Nisan 22':'אחרון של פסח','Sivan 7':'שבועות'};
+  return IL[k]||(!israel&&DI[k])||null;}
+function cholHamoed(o,israel){const a=israel?16:17;
+  if(o.hm==='Tishri'&&o.hd>=a&&o.hd<=21)return 'סוכות';if(o.hm==='Nisan'&&o.hd>=a&&o.hd<=20)return 'פסח';return null;}
+const regular=(o,isr)=>o.dow===6&&!holiday(o,isr)&&!cholHamoed(o,isr);
+
+// ---- parashat hashavua ----
+const PAR=['בראשית','נח','לך לך','וירא','חיי שרה','תולדות','ויצא','וישלח','וישב','מקץ','ויגש','ויחי','שמות','וארא','בא','בשלח','יתרו','משפטים','תרומה','תצוה','כי תשא','ויקהל','פקודי','ויקרא','צו','שמיני','תזריע','מצורע','אחרי מות','קדושים','אמור','בהר','בחוקותי','במדבר','נשא','בהעלותך','שלח','קרח','חוקת','בלק','פינחס','מטות','מסעי','דברים','ואתחנן','עקב','ראה','שופטים','כי תצא','כי תבוא','נצבים','וילך','האזינו'];
+function parashaMap(fromT,toT,isr){
+  const map=new Map(),days=[];for(let t=fromT;t<=toT;t+=DAY)days.push(dayAt(t));
+  const st=days.filter(o=>o.hk==='Tishri 22');
+  for(let i=0;i+1<st.length;i++){
+    const a=st[i].t,b=st[i+1].t,seg=days.filter(o=>o.t>a&&o.t<b);
+    const shav=seg.find(o=>o.hk==='Sivan 6'),av9=seg.find(o=>o.hk==='Av 9');if(!shav||!av9)continue;
+    const dregs=seg.filter(o=>o.t>a+DAY&&o.t<b+DAY&&regular(o,false));
+    const iregs=seg.filter(o=>regular(o,true));
+    const c1=Math.max(0,Math.min(4,34-dregs.filter(o=>o.t<shav.t).length));
+    const pairs=[[31,32],[28,29],[26,27],[21,22]].slice(0,c1);
+    if(isr){const n=iregs.filter(o=>o.t<=av9.t).length,c2=Math.max(0,Math.min(1,44-c1-n));if(c2)pairs.push([41,42]);}
+    else{const cb=(dayAt(shav.t+DAY).dow===6),n2=dregs.filter(o=>o.t>shav.t&&o.t<=av9.t).length,c2=Math.max(0,Math.min(2,10-n2));
+      if(cb)pairs.push([38,39]);if(c2-(cb?1:0)>0)pairs.push([41,42]);}
+    const starts=new Set(pairs.map(p=>p[0])),rd=[];for(let k=0;k<44;){if(starts.has(k)){rd.push([k,k+1]);k+=2}else{rd.push([k]);k++}}
+    const regs=isr?iregs:dregs,head=regs.filter(o=>o.t<=av9.t),tail=regs.filter(o=>o.t>av9.t);
+    if(head.length!==rd.length)continue;
+    head.forEach((o,j)=>map.set(o.t,rd[j]));
+    const tr=tail.length===9?[[44],[45],[46],[47],[48],[49],[50],[51],[52]]:tail.length===8?[[44],[45],[46],[47],[48],[49],[50,51],[52]]:null;
+    if(tr)tail.forEach((o,j)=>map.set(o.t,tr[j]));
+  }
+  const out=new Map();map.forEach((v,k)=>out.set(k,(v.length>1?'פרשות ':'פרשת ')+v.map(x=>PAR[x]).join('-')));return out;
+}
+
+const IL='Asia/Jerusalem';
+// [name, first day off, last day off, back to school]
+const VAC=[
+ ['חופשת חנוכה','2026-12-06','2026-12-12','2026-12-13'],
+ ['חופשת פורים','2027-03-23','2027-03-24','2027-03-25'],
+ ['חופשת פסח','2027-04-13','2027-04-28','2027-04-29'],
+ ['יום העצמאות','2027-05-12','2027-05-12','2027-05-13'],
+ ['ל״ג בעומר - יום חופש','2027-05-25','2027-05-25','2027-05-26'],
+ ['חופשת שבועות','2027-06-10','2027-06-12','2027-06-13'],
+ ['החופש הגדול - חטיבות ותיכונים','2027-06-21','2027-08-31','2027-09-01'],
+ ['החופש הגדול - יסודי וגנים','2027-07-01','2027-08-31','2027-09-01']];
+const CITIES=[
+ ['ישראל',[['jerusalem','ירושלים',31.778,35.235,40],['tel-aviv','תל אביב',32.0853,34.7818,20],['haifa','חיפה',32.794,34.9896,30],['beer-sheva','באר שבע',31.252,34.7915,20],['bnei-brak','בני ברק',32.0807,34.8338,20],['petah-tikva','פתח תקווה',32.0871,34.8875,20],['rishon','ראשון לציון',31.973,34.7925,20],['ashdod','אשדוד',31.8014,34.6435,20],['netanya','נתניה',32.3215,34.8532,20],['holon','חולון',32.0158,34.7874,20],['ramat-gan','רמת גן',32.0684,34.8248,20],['rehovot','רחובות',31.8928,34.8113,20],['modiin','מודיעין',31.8969,35.0095,20],['beit-shemesh','בית שמש',31.747,34.9881,20],['maale-adumim','מעלה אדומים',31.7774,35.2981,20],['ashkelon','אשקלון',31.6688,34.5743,20],['herzliya','הרצליה',32.1624,34.8447,20],['raanana','רעננה',32.1848,34.8713,20],['kfar-saba','כפר סבא',32.175,34.9069,20],['ariel','אריאל',32.1061,35.1739,20],['tiberias','טבריה',32.7959,35.531,20],['safed','צפת',32.9646,35.496,20],['afula','עפולה',32.6078,35.2897,20],['nahariya','נהריה',33.006,35.0941,20],['kiryat-shmona','קריית שמונה',33.2073,35.5712,20],['eilat','אילת',29.5577,34.9519,20]].map(c=>[...c,IL,true])],
+ ['חו״ל',[['new-york','ניו יורק',40.7128,-74.006,18,'America/New_York'],['miami','מיאמי',25.7617,-80.1918,18,'America/New_York'],['los-angeles','לוס אנג׳לס',34.0522,-118.2437,18,'America/Los_Angeles'],['toronto','טורונטו',43.6532,-79.3832,18,'America/Toronto'],['montreal','מונטריאול',45.5017,-73.5673,18,'America/Toronto'],['london','לונדון',51.5074,-0.1278,18,'Europe/London'],['paris','פריז',48.8566,2.3522,18,'Europe/Paris'],['antwerp','אנטוורפן',51.2194,4.4025,18,'Europe/Brussels'],['moscow','מוסקבה',55.7558,37.6173,18,'Europe/Moscow'],['buenos-aires','בואנוס איירס',-34.6037,-58.3816,18,'America/Argentina/Buenos_Aires'],['johannesburg','יוהנסבורג',-26.2041,28.0473,18,'Africa/Johannesburg'],['melbourne','מלבורן',-37.8136,144.9631,18,'Australia/Melbourne']].map(c=>[...c,false])]
+];
+const BYID={};CITIES.forEach(([,l])=>l.forEach(c=>BYID[c[0]]={id:c[0],name:c[1],lat:c[2],lon:c[3],off:c[4],tz:c[5],israel:c[6]}));
+const HAV=[['8.5','צאת הכוכבים'],['m42','42 דק׳'],['m50','50 דק׳'],['m72','רבנו תם']];
+
+const store={get(k,d){try{const v=localStorage.getItem('bhs_'+k);return v==null?d:JSON.parse(v)}catch(e){return d}},set(k,v){try{localStorage.setItem('bhs_'+k,JSON.stringify(v))}catch(e){}}};
+const S={city:store.get('city','jerusalem'),off:store.get('off',null),hav:store.get('hav','8.5'),il:store.get('il',null),lat:store.get('lat',31.778),lon:store.get('lon',35.235),filter:store.get('filter','all')};
+
+function loc(){
+  if(S.city==='custom'){const tz=Intl.DateTimeFormat().resolvedOptions().timeZone||IL;return {id:'custom',name:'מיקום מותאם',lat:+S.lat,lon:+S.lon,tz,israel:S.il!=null?S.il:tz===IL,off:S.off??(tz===IL?20:18)}}
+  const c=BYID[S.city]||BYID.jerusalem;return {...c,off:S.off??c.off,israel:S.il!=null?S.il:c.israel};
+}
+const sset=(o,dep=0.833)=>sunEvent(o.y,o.m,o.d,L.lat,L.lon,dep,false);
+const srise=(o,dep=0.833)=>sunEvent(o.y,o.m,o.d,L.lat,L.lon,dep,true);
+function havTime(o){
+  if(S.hav==='8.5'){const t=sset(o,8.5);if(!isNaN(t))return t;}
+  return sset(o)+(S.hav==='8.5'?50:+S.hav.slice(1))*60000;
+}
+function todayT(){const n=new Date(),p=new Intl.DateTimeFormat('en-CA',{timeZone:L.tz,year:'numeric',month:'2-digit',day:'2-digit'}).format(n).split('-');return Date.UTC(+p[0],+p[1]-1,+p[2]);}
+
+function buildBlocks(){
+  const base=todayT(),out=[];let cur=null;
+  for(let i=-8;i<400;i++){
+    const o=dayAt(base+i*DAY),hol=holiday(o,L.israel),shab=o.dow===6;
+    if(shab||hol){if(!cur)cur={days:[],erev:dayAt(o.t-DAY)};cur.days.push({o,shab,hol});}
+    else if(cur){out.push(cur);cur=null;}
+  }
+  return out.map(b=>{
+    const last=b.days[b.days.length-1],first=b.days[0];
+    const holN=[...new Set(b.days.map(x=>x.hol).filter(Boolean))],hasShab=b.days.some(x=>x.shab);
+    let name=holN.length?holN.join(' · ')+(hasShab?' ושבת':''):'שבת';
+    if(holN.length===1&&holN[0]==='יום כיפור'&&hasShab)name='יום כיפור (שבת)';
+    const chm=hasShab&&!holN.length?cholHamoed(first.o,L.israel):null;
+    if(chm)name='שבת חול המועד '+chm;
+    const mids=b.days.slice(1).map((x,j)=>({t:havTime(b.days[j].o),label:x.shab?'שבת':x.hol}));
+    return {kind:holN.length?'chag':'shabbat',name,par:!holN.length&&!chm?PMAP.get(first.o.t):null,chag:holN.length>0,yk:holN.includes('יום כיפור'),
+      start:sset(b.erev)-L.off*60000,end:havTime(last.o),first:first.o,len:b.days.length,mids};
+  });
+}
+function buildExtras(){
+  const base=todayT(),ex=[];
+  for(let i=-2;i<400;i++){
+    const o=dayAt(base+i*DAY);
+    const fast=(name,day,eve)=>{const st=eve?sset(dayAt(day.t-DAY)):srise(day,16.1);ex.push({kind:'fast',name,first:day,start:st,end:sset(day,7.083),eve});};
+    // minor fasts, with Shabbat postponement / advancement
+    if(o.hk==='Tamuz 17'||o.hk==='Tishri 3'||o.hk==='Av 9'){const nm=o.hm==='Tamuz'?'צום י״ז בתמוז':o.hm==='Tishri'?'צום גדליה':'תשעה באב';
+      const day=o.dow===6?dayAt(o.t+DAY):o;if(day===o||o.dow===6)fast(nm+(o.dow===6?' (נדחה)':''),day,o.hm==='Av');}
+    if(o.hk==='Tevet 10')fast('צום עשרה בטבת',o,false);
+    const adar=o.hm==='Adar'||o.hm==='Adar II';
+    if(adar&&o.hd===13){const day=o.dow===6?dayAt(o.t-2*DAY):o;fast('תענית אסתר'+(o.dow===6?' (מוקדם)':''),day,false);}
+    if(adar&&o.hd===(L.id==='jerusalem'?15:14)){
+      ex.push({kind:'fest',name:L.id==='jerusalem'?'שושן פורים':'פורים',first:o,start:sset(dayAt(o.t-DAY),8.5),label:'מגילה בערב',end:null});}
+    if(o.hk==='Nisan 15')ex.push({kind:'fest',name:'ספירת העומר',first:o,start:sset(o,8.5),lab:'ספירה',icon:'#i-wheat',sub:'מתחילה במוצאי החג הראשון של פסח',end:null});
+    if(o.hk==='Iyar 18')ex.push({kind:'fest',name:'ל״ג בעומר',first:o,start:sset(dayAt(o.t-DAY)),noTime:true,icon:'#i-wheat',end:null});
+    if(o.hk==='Kislev 24'){
+      const tFor=e=>e.dow===5?sset(e)-L.off*60000:e.dow===6?havTime(e):sset(e);
+      ex.push({kind:'fest',name:'חנוכה',first:dayAt(o.t+DAY),start:tFor(o),label:'נר ראשון',end:null,ch:true,eveDow:o.dow});}
+  }
+  // chol hamoed as one row per festival
+  for(let i=-8;i<400;i++){const o=dayAt(todayT()+i*DAY),nm=cholHamoed(o,L.israel);
+    if(!nm||cholHamoed(dayAt(o.t-DAY),L.israel))continue;
+    let n=0;while(cholHamoed(dayAt(o.t+n*DAY),L.israel))n++;const last=dayAt(o.t+(n-1)*DAY);
+    ex.push({kind:'chag',name:'חול המועד '+nm,first:o,last,start:srise(o),end:sset(last),len:n,range:true,icon:'#i-chag',note:nm==='סוכות'?'היום האחרון: הושענא רבה':''});}
+  // school vacations (Ministry of Education, state schools, 5787)
+  VAC.forEach(v=>{const f=dayAt(Date.parse(v[1]+'T00:00:00Z')),l=dayAt(Date.parse(v[2]+'T00:00:00Z'));
+    ex.push({kind:'vac',name:v[0],first:f,last:l,start:Date.parse(v[1]+'T06:00:00Z'),end:Date.parse(v[2]+'T21:00:00Z'),len:Math.round((l.t-f.t)/DAY)+1,range:true,icon:'#i-sun',back:Date.parse(v[3]+'T09:00:00Z')});});
+  return ex.filter(e=>(e.end||e.start+DAY)>Date.now());
+}
+
+let L,B,ALLB,X,PMAP,zOff=0;
+const $=id=>document.getElementById(id);
+function fT(t){return isNaN(t)?'--:--':new Intl.DateTimeFormat('he-IL',{timeZone:L.tz,hour:'2-digit',minute:'2-digit',hour12:false}).format(t)}
+function fD(t,o){return new Intl.DateTimeFormat('he-IL',{timeZone:L.tz,...o}).format(t)}
+function dur(ms){const m=Math.max(0,Math.round(ms/60000)),d=Math.floor(m/1440),h=Math.floor(m%1440/60),mi=m%60;
+  const p=[];if(d)p.push(d===1?'יום':d===2?'יומיים':d+' ימים');if(h)p.push(h===1?'שעה':h===2?'שעתיים':h+' שעות');if(!d&&mi)p.push(mi===1?'דקה':mi+' דקות');return p.map((x,i)=>i?(/^\d/.test(x)?'ו-':'ו')+x:x).join(' ')||'פחות מדקה';}
+function bigDur(ms){const m=Math.max(0,Math.ceil(ms/60000)),d=Math.floor(m/1440),h=Math.floor(m%1440/60),mi=m%60;
+  const u=(n,one,two,many)=>'<span>'+(n===1?'':n===2&&two?'':n)+'<small>'+(n===1?one:n===2&&two?two:many)+'</small></span>';
+  if(d)return u(d,'יום','יומיים','ימים')+(h?u(h,'שעה','שעתיים','שעות'):'');
+  return (h?u(h,'שעה','שעתיים','שעות'):'')+u(mi,'דקה','','דקות');}
+const ICON={vac:'#i-sun',shabbat:'#i-book',chag:'#i-chag',fast:'#i-fast',fest:'#i-menorah'};
+
+function renderWeek(b,p){
+  const today=todayT(),sun=today-dayAt(today).dow*DAY,el=$('week');el.innerHTML='';
+  const L7=['א','ב','ג','ד','ה','ו','ש'];
+  for(let i=0;i<7;i++){const o=dayAt(sun+i*DAY),c=document.createElement('div');
+    const hol=holiday(o,L.israel)||cholHamoed(o,L.israel);
+    c.className='wd'+(o.t<today?' past':'')+(o.t===today?' today':'')+(i===5?' fri':'')+(i===6?' sat':'')+(hol&&i<5?' hol':'');
+    const ic=i===5?'#i-flame':i===6?'#i-stars':hol?'#i-chag':'';
+    c.innerHTML='<span></span><b></b>'+(ic?'<svg><use href="'+ic+'"/></svg>':'<svg></svg>');
+    c.children[0].textContent=L7[i];c.children[1].textContent=o.d;el.appendChild(c);}
+  $('wfill').style.width=(Math.max(0,Math.min(1,p))*100)+'%';
+}
+function renderHero(){
+  const now=Date.now(),b=B[0],inside=now>=b.start,masc=b.chag||b.yk,word=b.yk?'הצום':b.chag?'החג':'השבת';
+  $('app').classList.toggle('inside',inside);
+  $('hDate').textContent=hebDate(b.first);
+  $('hName').textContent=inside?(b.yk?'גמר חתימה טובה':b.chag?'חג שמח':'שבת שלום'):(b.par||b.name);
+  const tgt=inside?b.end:b.start;
+  $('hBig').innerHTML=bigDur(tgt-now);
+  $('hLbl').textContent=inside?'עד צאת '+word.slice(1):'עד הדלקת נרות';
+  const prev=[...ALLB].reverse().find(x=>x.end<=now);
+  const from=inside?b.start:(prev?prev.end:b.start-6*DAY);
+  renderWeek(b,(now-from)/(tgt-from));
+  $('hIn').textContent=fT(b.start);$('hInD').textContent=fD(b.start,{weekday:'long',day:'numeric',month:'numeric'});
+  $('hOut').textContent=fT(b.end);$('hOutD').textContent=fD(b.end,{weekday:'long',day:'numeric',month:'numeric'});
+  $('tIn').classList.toggle('on',!inside);$('tOut').classList.toggle('on',inside);
+  const ex=b.mids.length?b.mids.map(x=>'הדלקה ל'+x.label+' '+fD(x.t,{weekday:'long'})+' אחרי '+fT(x.t)).join(' · '):'';
+  $('hExtra').textContent=ex;$('hExtra').hidden=!ex;
+}
+function renderZmanim(){
+  const o=dayAt(todayT()+zOff*DAY),now=Date.now();
+  const rise=srise(o),set=sset(o),alot=srise(o,16.1),tz16=sset(o,16.1),hr=(set-rise)/12,mga=(tz16-alot)/12;
+  $('zDate').textContent=(zOff===0?'היום · ':'')+fD(o.t+12*36e5,{weekday:'long',day:'numeric',month:'numeric'})+' · '+hebDate(o);
+  const Z=[['עלות השחר',alot],['הנץ החמה',rise,1],['סוף ק״ש מג״א',alot+3*mga],['סוף ק״ש גר״א',rise+3*hr,1],['סוף תפילה מג״א',alot+4*mga],['סוף תפילה גר״א',rise+4*hr],['חצות היום',rise+6*hr],['מנחה גדולה',rise+6.5*hr],['פלג המנחה',rise+10.75*hr],['שקיעה',set,1],['צאת הכוכבים',sset(o,8.5),1],['רבנו תם',set+72*60000]];
+  const g=$('zGrid');g.innerHTML='';
+  const nx=zOff===0?Z.findIndex(z=>z[1]>now):-1;
+  Z.forEach(([n,t,k],i)=>{const r=document.createElement('div');r.className='z'+(zOff===0&&t<now?' past':'')+(i===nx?' now':'');
+    r.innerHTML='<span class="n"></span><span class="v num"></span>';r.children[0].textContent=n;r.children[1].textContent=fT(t);g.appendChild(r);});
+  $('zToday').hidden=zOff===0;
+}
+const FILTERS=[['all','הכל'],['shabbat','שבתות'],['chag','חגים'],['fast','צומות'],['fest','מועדים'],['vac','חופשות']];
+function renderList(){
+  const fl=$('filters');fl.innerHTML='';
+  FILTERS.forEach(([v,l])=>{const c=document.createElement('button');c.type='button';c.textContent=l;c.setAttribute('aria-pressed',String(S.filter===v));c.onclick=()=>{S.filter=v;store.set('filter',v);renderList()};fl.appendChild(c)});
+  const items=[...B.slice(1),...X].filter(e=>S.filter==='all'||e.kind===S.filter).sort((a,b)=>a.start-b.start);
+  const el=$('list');el.innerHTML='';let lastM='';
+  items.forEach(b=>{
+    const mk=fD(b.first.t+12*36e5,{month:'long',year:'numeric'});
+    if(mk!==lastM){const h=document.createElement('div');h.className='month';h.textContent=mk;el.appendChild(h);lastM=mk;}
+    const r=document.createElement('div');r.className='ev '+b.kind;
+    r.innerHTML='<span class="ic"><svg><use href="'+(b.icon||ICON[b.kind])+'"/></svg></span><div style="min-width:0"><div class="nm"></div><div class="s"></div></div><div class="tt num"></div>';
+    const nm=r.querySelector('.nm'),sub=r.querySelector('.s'),tt=r.querySelector('.tt');
+    nm.textContent=b.par||b.name;
+    if(b.len>1){const t=document.createElement('span');t.className='tag';t.textContent=b.len+' ימים';nm.appendChild(t);}
+    const dstr=fD(b.first.t+12*36e5,{weekday:'short',day:'numeric',month:'numeric'})+' · '+hebDate(b.first,false);
+    const line=(lab,t)=>{const s=document.createElement('span');s.innerHTML='<b></b><i></i>';s.children[0].style.fontWeight='300';s.children[0].textContent=t;s.children[1].textContent=lab;tt.appendChild(s)};
+    if((b.kind==='shabbat'||b.kind==='chag')&&!b.range){sub.textContent=b.par&&b.name!=='שבת'?b.name+' · '+dstr:dstr;line('כניסה',fT(b.start));line('יציאה',fT(b.end));}
+    else if(b.kind==='fast'){sub.textContent=dstr+(b.eve?' · מהערב הקודם':' · מעלות השחר');line('התחלה',fT(b.start));line('סיום',fT(b.end));}
+    else if(b.range){const ds=x=>fD(x.t+12*36e5,{weekday:'short'})+' '+fD(x.t+12*36e5,{day:'numeric',month:'numeric'});
+      sub.textContent=b.len>1?'מ'+ds(b.first)+' עד '+ds(b.last)+(b.note?' · '+b.note:''):ds(b.first);
+      if(b.back)line('חזרה',fD(b.back,{day:'numeric',month:'numeric'}));}
+    else if(b.icon){sub.textContent=b.sub||dstr;if(!b.noTime)line(b.lab,fT(b.start));}
+    else{sub.textContent=b.ch?'נר ראשון · '+fD(b.start,{weekday:'short',day:'numeric',month:'numeric'})+(b.eveDow===5?' · לפני שבת':b.eveDow===6?' · אחרי שבת':''):dstr;line(b.ch?'הדלקה':'מגילה',fT(b.start));}
+    el.appendChild(r);
+  });
+}
+function opts(el,items,val,on){el.innerHTML='';items.forEach(([v,l])=>{const c=document.createElement('button');c.type='button';c.textContent=l;c.setAttribute('aria-pressed',String(v===val));c.onclick=()=>on(v);el.appendChild(c);});}
+function renderControls(){
+  opts($('offChips'),[[18,'18'],[20,'20'],[30,'30'],[40,'40']],L.off,v=>{S.off=v;store.set('off',v);all()});
+  opts($('havChips'),HAV,S.hav,v=>{S.hav=v;store.set('hav',v);all()});
+  opts($('ilChips'),[[true,'ארץ ישראל'],[false,'חו״ל - יום טוב שני']],L.israel,v=>{S.il=v;store.set('il',v);all()});
+  $('customBox').hidden=S.city!=='custom';$('cityName').textContent=L.name;
+}
+// ---- sefirat ha'omer ----
+function omerFor(o){const m=o.hm,d=o.hd;if(m==='Nisan'&&d>=16)return d-15;if(m==='Iyar')return 15+d;if(m==='Sivan'&&d<=5)return 44+d;return 0;}
+const OW1=['','אחד','שני','שלשה','ארבעה','חמשה','ששה','שבעה','שמונה','תשעה','עשרה'];
+const OT=['','אחד','שנים','שלשה','ארבעה','חמשה','ששה','שבעה','שמונה','תשעה'];
+const OTENS=['','עשר','עשרים','שלשים','ארבעים'];
+function omerWords(n){
+  const w=Math.floor(n/7),r=n%7;
+  let days;
+  if(n===1)days='יום אחד';else if(n<=10)days=OW1[n]+' ימים';
+  else if(n<20)days=OT[n-10]+' עשר יום';
+  else{const u=n%10,tn=Math.floor(n/10);days=(u?OT[u]+' ו':'')+OTENS[tn]+' יום';}
+  let s='היום '+days;
+  if(w){const wk=w===1?'שבוע אחד':OW1[w]+' שבועות';const rd=r===0?'':r===1?' ויום אחד':' ו'+OW1[r]+' ימים';s+=', שהם '+wk+rd;}
+  return s+' לעומר';
+}
+const SEF=['חסד','גבורה','תפארת','נצח','הוד','יסוד','מלכות'];
+function sefira(n){const w=Math.floor((n-1)/7),d=(n-1)%7;return SEF[d]+' שב'+SEF[w];}
+function renderOmer(){
+  const el=$('omer'),today=dayAt(todayT()),now=Date.now();
+  const tonight=omerFor(dayAt(today.t+DAY)),cur=omerFor(today),tz=sset(today,8.5);
+  const after=now>=tz;
+  // after nightfall the Hebrew date already moved on: tonight's count is the one being said now
+  const show=after||tonight?tonight:cur,past=!after&&!tonight;
+  if(!show){el.hidden=true;return;}
+  el.hidden=false;
+  const eyebrow=past?'נספר אמש · הספירה הושלמה':(after?'הערב · ':'הלילה · ')+'אחרי צאת הכוכבים';
+  const tags=[sefira(show)];if(show===33)tags.unshift('ל״ג בעומר');
+  let dots='';for(let w=0;w<7;w++){dots+='<div class="om-w">';for(let d=0;d<7;d++){const k=w*7+d+1;dots+='<i class="'+(k<show?'on':k===show?'tn':'')+'"></i>';}dots+='</div>';}
+  const forgot=!after&&cur&&tonight?'<p class="om-f">לא ספרת אתמול בלילה? אפשר לספור היום ('+cur+') בלי ברכה, ולהמשיך הלילה עם ברכה.</p>':'';
+  el.innerHTML='<div class="om-h"><svg><use href="#i-wheat"/></svg><span>ספירת העומר · <span class="e"></span></span><span class="when num"></span></div>'+
+    '<div class="om-row"><div class="om-n num">'+show+'<small>מתוך 49</small></div></div><div class="om-t"></div>'+
+    '<div class="om-s">'+tags.map((x,i)=>'<span class="'+(x==='ל״ג בעומר'?'hi':'')+'"></span>').join('')+'</div><div class="om-dots">'+dots+'</div>'+forgot;
+  el.querySelector('.e').textContent=eyebrow;el.querySelector('.when').textContent=past?'':fT(tz);
+  el.querySelector('.om-t').textContent=omerWords(show);
+  el.querySelectorAll('.om-s span').forEach((s,i)=>s.textContent=tags[i]);
+}
+function all(){
+  L=loc();const b=todayT();PMAP=parashaMap(b-400*DAY,b+800*DAY,L.israel);
+  ALLB=buildBlocks();B=ALLB.filter(x=>x.end>Date.now());X=buildExtras();
+  renderHero();renderOmer();renderZmanim();renderList();renderControls();
+  $('today').textContent=fD(Date.now(),{weekday:'long'})+' · '+hebDate(dayAt(b));
+}
+
+(function(){const s=$('city');CITIES.forEach(([g,l])=>{const og=document.createElement('optgroup');og.label=g;l.forEach(c=>{const o=document.createElement('option');o.value=c[0];o.textContent=c[1];og.appendChild(o)});s.appendChild(og)});
+  const o=document.createElement('option');o.value='custom';o.textContent='מיקום מותאם (קואורדינטות)';s.appendChild(o);
+  s.value=S.city;s.onchange=()=>{S.city=s.value;S.off=null;S.il=null;store.set('city',S.city);store.set('off',null);store.set('il',null);all()};
+  $('lat').value=S.lat;$('lon').value=S.lon;
+  ['lat','lon'].forEach(k=>$(k).addEventListener('change',e=>{const v=parseFloat(e.target.value);if(isNaN(v))return;S[k]=v;store.set(k,v);all()}));
+  $('zPrev').onclick=()=>{zOff--;renderZmanim()};$('zNext').onclick=()=>{zOff++;renderZmanim()};$('zToday').onclick=()=>{zOff=0;renderZmanim()};
+  const open=()=>{$('scrim').hidden=false},close=()=>{$('scrim').hidden=true};
+  $('cityBtn').onclick=open;$('shClose').onclick=close;$('scrim').addEventListener('click',e=>{if(e.target.id==='scrim')close()});
+  document.addEventListener('keydown',e=>{if(e.key==='Escape')close()});
+})();
+
+$('copyBtn').onclick=()=>{const b=B[0];
+  const txt=(b.par?b.par+' · ':'')+b.name+' - '+L.name+'\n'+hebDate(b.first)+'\n🕯️ הדלקת נרות: '+fT(b.start)+'\n✨ יציאה: '+fT(b.end)+(b.mids.length?'\n'+$('hExtra').textContent:'')+'\n'+(b.chag?'חג שמח!':'שבת שלום!');
+  if(navigator.clipboard&&navigator.clipboard.writeText){navigator.clipboard.writeText(txt).then(()=>toast('הועתק'),()=>fallback(txt))}else fallback(txt);
+};
+function fallback(t){const a=document.createElement('textarea');a.value=t;document.body.appendChild(a);a.select();try{document.execCommand('copy');toast('הועתק')}catch(e){toast('לא הצלחתי להעתיק')}a.remove();}
+let tt;function toast(m){const t=$('toast');t.textContent=m;t.classList.add('on');clearTimeout(tt);tt=setTimeout(()=>t.classList.remove('on'),1600);}
+
+(function(){const c=$('sky'),x=c.getContext('2d'),rm=matchMedia('(prefers-reduced-motion: reduce)').matches;let st=[];
+  function size(){const r=c.getBoundingClientRect(),dp=devicePixelRatio||1;c.width=r.width*dp;c.height=r.height*dp;x.setTransform(dp,0,0,dp,0,0);
+    st=Array.from({length:Math.round(r.width/9)},()=>({x:Math.random()*r.width,y:Math.random()*r.height*.6,r:Math.random()*1.1+.3,p:Math.random()*6.28}));draw(0)}
+  function draw(t){const r=c.getBoundingClientRect(),inside=$('app').classList.contains('inside');x.clearRect(0,0,r.width,r.height);
+    st.forEach(s=>{x.globalAlpha=(inside?.55:.3)+.35*Math.abs(Math.sin(s.p+t/1600));x.fillStyle='#fff';x.beginPath();x.arc(s.x,s.y,s.r,0,6.283);x.fill()});x.globalAlpha=1;}
+  size();addEventListener('resize',size);if(!rm)(function loop(t){draw(t);requestAnimationFrame(loop)})(0);})();
+
+all();setInterval(()=>{if(B&&B[0]&&Date.now()>B[0].end)all();else if(B){renderHero();renderOmer()}},30000);
+</script>
+
+</body>
+</html>
